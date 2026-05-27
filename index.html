@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Offline CRM Pro v4.14</title>
-<link rel="manifest" href="manifest.json">
+<title>Offline CRM Pro v4.15</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CRM Pro">
@@ -44,9 +43,8 @@ button{cursor:pointer;}
 .small{font-size:12px;color:#6B7280;}
 a{color:#0284C7;text-decoration:none;}
 .top-buttons{display:flex;gap:8px;}
-.visit-history{background:#f9fafb;padding:8px;border-radius:8px;margin-top:10px;max-height: 120px;overflow-y: auto;font-size: 12px;}
-.visit-item{border-bottom: 1px solid #e5e7eb;padding:4px 0;}
-.visit-item:last-child{border-bottom: none;}
+.visit-history{background:#f9fafb;padding:8px;border-radius:8px;margin-top:10px;font-size: 12px;}
+.visit-item{padding:4px 0;}
 .icon-btn{border:none;background:transparent;font-size:18px;cursor:pointer;}
 .store-header-row {display: flex;justify-content: space-between;align-items: flex-start;margin-bottom: 8px;}
 </style>
@@ -114,13 +112,13 @@ a{color:#0284C7;text-decoration:none;}
 <script>
 let stores = [];
 let currentCheckOutId = null;
-function generateId(){ return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15); }
+function generateId(){ return crypto.randomUUID? crypto.randomUUID() : Math.random().toString(36).substring(2, 15); }
 function getBannerColor(banner) {
     const b = banner?.toLowerCase() || '';
-    if (b.includes('liquor legends')) return 'rgba(209, 250, 229, 0.95)'; 
-    if (b.includes('mcguires')) return 'rgba(237, 233, 254, 0.95)'; 
-    if (b.includes('independent')) return 'rgba(219, 234, 254, 0.95)'; 
-    return 'rgba(254, 249, 195, 0.95)'; 
+    if (b.includes('liquor legends')) return 'rgba(209, 250, 229, 0.95)';
+    if (b.includes('mcguires')) return 'rgba(237, 233, 254, 0.95)';
+    if (b.includes('independent')) return 'rgba(219, 234, 254, 0.95)';
+    return 'rgba(254, 249, 195, 0.95)';
 }
 function loadStores(){
     const saved = localStorage.getItem('offline_crm_stores');
@@ -132,7 +130,7 @@ function updateBannerFilterOptions(){
     const filterSelect = document.getElementById('bannerFilter');
     const currentValue = filterSelect.value;
     const banners = new Set();
-    stores.forEach(s => { if(s.bannerGroup && s.bannerGroup.trim() !== '') { banners.add(s.bannerGroup.trim()); } });
+    stores.forEach(s => { if(s.bannerGroup && s.bannerGroup.trim()!== '') { banners.add(s.bannerGroup.trim()); } });
     filterSelect.innerHTML = '<option value="">All Stores</option>';
     Array.from(banners).sort().forEach(b => {
         const opt = document.createElement('option'); opt.value = b; opt.textContent = b; filterSelect.appendChild(opt);
@@ -142,7 +140,7 @@ function updateBannerFilterOptions(){
 function calculateStats(){
     const total = stores.length; let checkedInCount = 0; let todayCount = 0; let weekCount = 0;
     const now = new Date(); const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const oneDayMs = 24 * 60 * 60 * 1000; const currentDay = now.getDay(); const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1; 
+    const oneDayMs = 24 * 60 * 60 * 1000; const currentDay = now.getDay(); const distanceToMonday = currentDay === 0? 6 : currentDay - 1;
     const startOfWeek = startOfToday - (distanceToMonday * oneDayMs);
     stores.forEach(store => {
         if(store.checkedIn) checkedInCount++;
@@ -176,26 +174,25 @@ function renderStores(){
         if(s.storeGroup) tagsHtml += `<span class="store-tag blue">${s.storeGroup}</span>`;
         if(s.bannerGroup) tagsHtml += `<span class="store-tag purple">${s.bannerGroup}</span>`;
         if(s.storeSuburb) tagsHtml += `<span class="store-tag green">${s.storeSuburb}</span>`;
+
+        // CHANGED: Show only latest visit, not full history
         let historyHtml = '';
         if(s.visits && s.visits.length > 0){
-            const sortedVisits = [...s.visits].sort((a,b) => new Date(b.date) - new Date(a.date));
-            historyHtml = `<div class="visit-history"><strong>History:</strong>`;
-            sortedVisits.forEach(v => {
-                const d = new Date(v.date); const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear().toString().slice(-2)}`;
-                historyHtml += `<div class="visit-item"><strong>${dateStr}:</strong> ${v.note || 'No notes'}</div>`;
-            });
-            historyHtml += `</div>`;
+            const v = s.visits[0];
+            const d = new Date(v.date); const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear().toString().slice(-2)}`;
+            historyHtml = `<div class="visit-history"><strong>Last Visit:</strong><div class="visit-item"><strong>${dateStr}:</strong> ${v.note || 'No notes'}</div></div>`;
         }
-        const checkInBtnHtml = s.checkedIn ? `<button class="btn btn-success" onclick="openCheckOutModal('${s.id}')">Check Out</button>` : `<button class="btn btn-primary" onclick="toggleCheckIn('${s.id}')">Check In</button>`;
+
+        const checkInBtnHtml = s.checkedIn? `<button class="btn btn-success" onclick="openCheckOutModal('${s.id}')">Check Out</button>` : `<button class="btn btn-primary" onclick="toggleCheckIn('${s.id}')">Check In</button>`;
         card.innerHTML = `
             <div>
                 <div class="store-header-row"><h3>${s.storeName}</h3><button class="icon-btn" onclick="openStoreModal('${s.id}')">✏️</button></div>
                 <div style="margin-bottom:8px;">${tagsHtml}</div>
-                ${s.contactPerson ? `<div class="info">👤 ${s.contactPerson}</div>` : ''}
-                ${s.phone ? `<div class="info">📞 <a href="tel:${s.phone}">${s.phone}</a></div>` : ''}
-                ${s.customerEmail ? `<div class="info">✉️ <a href="mailto:${s.customerEmail}">${s.customerEmail}</a></div>` : ''}
-                ${s.storeAddress ? `<div class="info">📍 <a href="maps://apple.com{encodeURIComponent(s.storeAddress)}" target="_blank">${s.storeAddress}</a></div>` : ''}
-                ${s.contactNotes ? `<div class="info" style="margin-top:8px;font-style:italic;color:#4b5563;">Notes: ${s.contactNotes}</div>` : ''}
+                ${s.contactPerson? `<div class="info">👤 ${s.contactPerson}</div>` : ''}
+                ${s.phone? `<div class="info">📞 <a href="tel:${s.phone}">${s.phone}</a></div>` : ''}
+                ${s.customerEmail? `<div class="info">✉️ <a href="mailto:${s.customerEmail}">${s.customerEmail}</a></div>` : ''}
+                ${s.storeAddress? `<div class="info">📍 <a href="https://maps.apple.com/?q=${encodeURIComponent(s.storeAddress)}" target="_blank">${s.storeAddress}</a></div>` : ''}
+                ${s.contactNotes? `<div class="info" style="margin-top:8px;font-style:italic;color:#4b5563;">Notes: ${s.contactNotes}</div>` : ''}
                 ${historyHtml}
             </div>
             <div style="margin-top:14px;">${checkInBtnHtml}</div>
@@ -226,20 +223,30 @@ function saveStore(event){
         storeName: document.getElementById('storeName').value, storeGroup: document.getElementById('storeGroup').value, bannerGroup: document.getElementById('bannerGroup').value, contactPerson: document.getElementById('contactPerson').value,
         phone: document.getElementById('phone').value, customerEmail: document.getElementById('customerEmail').value, storeSuburb: document.getElementById('storeSuburb').value, storeAddress: document.getElementById('storeAddress').value, contactNotes: document.getElementById('contactNotes').value
     };
-    if(id){ const index = stores.findIndex(s => s.id === id); if(index !== -1){ stores[index] = { ...stores[index], ...storeData }; } } 
+    if(id){ const index = stores.findIndex(s => s.id === id); if(index!== -1){ stores[index] = {...stores[index],...storeData }; } }
     else { storeData.id = generateId(); storeData.checkedIn = false; storeData.visits = []; stores.push(storeData); }
     saveToLocalStorage(); updateBannerFilterOptions(); renderStores(); closeStoreModal();
 }
 function deleteStore(){
     const id = document.getElementById('storeId').value; if(!id) return;
-    if(confirm('Delete store?')){ stores = stores.filter(s => s.id !== id); saveToLocalStorage(); updateBannerFilterOptions(); renderStores(); closeStoreModal(); }
+    if(confirm('Delete store?')){ stores = stores.filter(s => s.id!== id); saveToLocalStorage(); updateBannerFilterOptions(); renderStores(); closeStoreModal(); }
 }
-function toggleCheckIn(id){ const index = stores.findIndex(s => s.id === id); if(index !== -1){ stores[index].checkedIn = !stores[index].checkedIn; saveToLocalStorage(); renderStores(); } }
+function toggleCheckIn(id){ const index = stores.findIndex(s => s.id === id); if(index!== -1){ stores[index].checkedIn =!stores[index].checkedIn; saveToLocalStorage(); renderStores(); } }
 function openCheckOutModal(id){ currentCheckOutId = id; const s = stores.find(store => store.id === id); if(!s) return; document.getElementById('checkOutStoreName').textContent = s.storeName; document.getElementById('visitNote').value = ''; document.getElementById('checkOutModal').classList.add('active'); }
 function closeCheckOutModal(){ document.getElementById('checkOutModal').classList.remove('active'); currentCheckOutId = null; }
+
+// CHANGED: Override previous note instead of pushing
 function submitCheckOut(){
-    if(!currentCheckOutId) return; const index = stores.findIndex(s => s.id === currentCheckOutId);
-    if(index !== -1){ const note = document.getElementById('visitNote').value; if(!stores[index].visits) stores[index].visits = []; stores[index].visits.push({ id: generateId(), date: new Date().toISOString(), note: note }); stores[index].checkedIn = false; saveToLocalStorage(); renderStores(); }
+    if(!currentCheckOutId) return;
+    const index = stores.findIndex(s => s.id === currentCheckOutId);
+    if(index!== -1){
+        const note = document.getElementById('visitNote').value;
+        // Replace entire visits array with single latest entry
+        stores[index].visits = [{ id: generateId(), date: new Date().toISOString(), note: note }];
+        stores[index].checkedIn = false;
+        saveToLocalStorage();
+        renderStores();
+    }
     closeCheckOutModal();
 }
 function exportData(){
@@ -248,17 +255,11 @@ function exportData(){
 }
 function importData(){ document.getElementById('fileInput').click(); }
 function handleImport(event){
-    const file = event.target.files; if(!file) return; const reader = new FileReader();
+    const file = event.target.files[0]; if(!file) return; const reader = new FileReader();
     reader.onload = function(e){ try { const imported = JSON.parse(e.target.result); if(Array.isArray(imported)){ if(confirm('Overwrite local data?')){ stores = imported; saveToLocalStorage(); updateBannerFilterOptions(); renderStores(); } } } catch(err) { alert('Failed to parse file.'); } };
     reader.readAsText(file); event.target.value = '';
 }
 window.onload = loadStores;
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
 </script>
 </body>
 </html>
