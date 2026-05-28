@@ -115,10 +115,12 @@ let currentCheckOutId = null;
 function generateId(){ return crypto.randomUUID? crypto.randomUUID() : Math.random().toString(36).substring(2, 15); }
 function getBannerColor(banner) {
     const b = banner?.toLowerCase() || '';
+    if (b.includes('cellarbrations')) return 'rgba(255, 140, 0, 0.95)'; // Dark Orange
+    if (b.includes('bottlemart')) return 'rgba(0, 122, 255, 0.95)'; // iMessage blue
     if (b.includes('liquor legends')) return 'rgba(209, 250, 229, 0.95)';
     if (b.includes('mcguires')) return 'rgba(237, 233, 254, 0.95)';
     if (b.includes('independent')) return 'rgba(219, 234, 254, 0.95)';
-    return 'rgba(254, 249, 195, 0.95)';
+    return 'rgba(254, 249, 195, 0.95)'; // default yellow
 }
 function loadStores(){
     const saved = localStorage.getItem('offline_crm_stores');
